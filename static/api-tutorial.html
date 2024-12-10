@@ -63,7 +63,7 @@
 <pre><code>import requests
 
 # Define the base URL of the API
-BASE_URL = "http://localhost:8080"
+BASE_URL = "https://rvkg-api-ogzj.shuttle.app"
 
 # Make a GET request to the /random-number endpoint
 response = requests.get(BASE_URL + "/random-number")
@@ -83,7 +83,7 @@ else:
 
 <pre><code>import requests
 
-BASE_URL = "http://localhost:8080"
+BASE_URL = "https://rvkg-api-ogzj.shuttle.app"
 
 params = {
     "min": 10,
@@ -106,7 +106,7 @@ else:
 
 <pre><code>import requests
 
-BASE_URL = "http://localhost:8080"
+BASE_URL = "https://rvkg-api-ogzj.shuttle.app"
 
 params = {
     "name": "Alice"
@@ -130,7 +130,7 @@ else:
 
 <pre><code>import requests
 
-BASE_URL = "http://localhost:8080"
+BASE_URL = "https://rvkg-api-ogzj.shuttle.app"
 
 user_id = 1
 response = requests.get(f"{BASE_URL}/users/{user_id}")
@@ -149,7 +149,7 @@ else:
 
 <pre><code>import requests
 
-BASE_URL = "http://localhost:8080"
+BASE_URL = "https://rvkg-api-ogzj.shuttle.app"
 
 params = {
     "author_id": 1
@@ -170,7 +170,7 @@ else:
 
 <pre><code>import requests
 
-BASE_URL = "http://localhost:8080"
+BASE_URL = "https://rvkg-api-ogzj.shuttle.app"
 post_id = 3
 
 response = requests.get(f"{BASE_URL}/posts/{post_id}")
