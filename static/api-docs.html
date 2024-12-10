@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>API Documentation</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+    }
+
+    code {
+        background: #f9f9f9;
+        padding: 3px 5px;
+        border-radius: 3px;
+        font-family: Consolas, monospace;
+    }
+
+    pre {
+        background: #f9f9f9;
+        padding: 10px;
+        border-radius: 3px;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    table, th, td {
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+
+    th, td {
+        padding: 10px;
+    }
+
+    .optional {
+        color: #555;
+    }
+
+    .error {
+        color: #c00;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+
+<h1>API Documentation</h1>
+
+<p>This document describes the REST API endpoints exposed by the provided code. The API uses <code>actix-web</code> framework and returns JSON responses. Error responses are also returned in JSON format. All responses include appropriate HTTP status codes.</p>
+
+<h2>Error Handling</h2>
+<p>The following errors are returned by the API:</p>
+<ul>
+    <li><code>InvalidRange</code>: Returned if the specified range for random number generation is invalid (e.g., <code>min > max</code>).</li>
+    <li><code>UserNotFound</code>: Returned if a user with the specified ID does not exist.</li>
+    <li><code>PostNotFound</code>: Returned if a post with the specified ID does not exist.</li>
+</ul>
+
+<p>All error responses follow this JSON format:</p>
+<pre><code>{
+  "error": "Error Type",
+  "details": "Additional information about the error"
+}
+</code></pre>
+
+<hr/>
+
+<h2>Resource: Random Number</h2>
+
+<h3>GET /random-number</h3>
+<p>Generates a random number within a specified range.</p>
+
+<h4>Query Parameters</h4>
+<table>
+    <tr>
+        <th>Name</th><th>Type</th><th>Description</th><th>Default</th>
+    </tr>
+    <tr>
+        <td>min</td><td>uint8</td><td class="optional">Optional minimum value</td><td>0</td>
+    </tr>
+    <tr>
+        <td>max</td><td>uint8</td><td class="optional">Optional maximum value</td><td>255</td>
+    </tr>
+</table>
+
+<p>If <code>min > max</code>, returns a <code>400 Bad Request</code> with an <code>InvalidRange</code> error.</p>
+
+<h4>Response</h4>
+<p>On success (<code>200 OK</code>):</p>
+<pre><code>{
+  "number": &lt;uint8&gt;
+}
+</code></pre>
+
+<h4>Example Requests</h4>
+<pre><code>GET /random-number          # Returns a random number between 0 and 255
+GET /random-number?min=10    # Returns a random number between 10 and 255
+GET /random-number?max=100   # Returns a random number between 0 and 100
+GET /random-number?min=50&max=10 # Returns 400 Bad Request (InvalidRange)
+</code></pre>
+
+<hr/>
+
+<h2>Resource: Users</h2>
+
+<h3>GET /users</h3>
+<p>Returns a list of users, optionally filtered by provided query parameters.</p>
+
+<h4>Query Parameters</h4>
+<table>
+    <tr>
+        <th>Name</th><th>Type</th><th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td><td>int32</td><td class="optional">Optional: filter by exact user id</td>
+    </tr>
+    <tr>
+        <td>name</td><td>string</td><td class="optional">Optional: filter by exact user name</td>
+    </tr>
+    <tr>
+        <td>age</td><td>int32</td><td class="optional">Optional: filter by exact user age</td>
+    </tr>
+</table>
+
+<h4>Response</h4>
+<p>On success (<code>200 OK</code>), returns an array of <code>User</code> objects:</p>
+<pre><code>[
+  {
+    "id": &lt;int32&gt;,
+    "name": &lt;string&gt;,
+    "age": &lt;int32&gt;,
+    "bio": &lt;string | null&gt;
+  },
+  ...
+]
+</code></pre>
+
+<h4>Example Requests</h4>
+<pre><code>GET /users
+GET /users?name=Alice
+GET /users?id=2
+GET /users?age=25
+GET /users?name=Bob&age=30
+</code></pre>
+
+<h3>GET /users/{id}</h3>
+<p>Returns a single user by their ID.</p>
+
+<h4>Path Parameters</h4>
+<table>
+    <tr>
+        <th>Name</th><th>Type</th><th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td><td>int32</td><td>User ID</td>
+    </tr>
+</table>
+
+<h4>Response</h4>
+<p>On success (<code>200 OK</code>):</p>
+<pre><code>{
+  "id": &lt;int32&gt;,
+  "name": &lt;string&gt;,
+  "age": &lt;int32&gt;,
+  "bio": &lt;string | null&gt;
+}
+</code></pre>
+
+<p>If the user is not found, returns <code>404 Not Found</code> with a <code>UserNotFound</code> error.</p>
+
+<h4>Example Requests</h4>
+<pre><code>GET /users/1       # Returns the user with id=1
+GET /users/9999     # Returns 404 UserNotFound
+</code></pre>
+
+<hr/>
+
+<h2>Resource: Posts</h2>
+
+<h3>GET /posts</h3>
+<p>Returns a list of posts, optionally filtered by query parameters.</p>
+
+<h4>Query Parameters</h4>
+<table>
+    <tr>
+        <th>Name</th><th>Type</th><th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td><td>int32</td><td class="optional">Optional: filter by exact post id</td>
+    </tr>
+    <tr>
+        <td>title</td><td>string</td><td class="optional">Optional: filter by exact title</td>
+    </tr>
+    <tr>
+        <td>content</td><td>string</td><td class="optional">Optional: filter by exact content</td>
+    </tr>
+    <tr>
+        <td>author_id</td><td>int32</td><td class="optional">Optional: filter by exact author id</td>
+    </tr>
+</table>
+
+<h4>Response</h4>
+<p>On success (<code>200 OK</code>), returns an array of <code>Post</code> objects:</p>
+<pre><code>[
+  {
+    "id": &lt;int32&gt;,
+    "title": &lt;string&gt;,
+    "content": &lt;string&gt;,
+    "author_id": &lt;int32&gt;
+  },
+  ...
+]
+</code></pre>
+
+<h4>Example Requests</h4>
+<pre><code>GET /posts
+GET /posts?author_id=1
+GET /posts?title=Post%201
+GET /posts?id=3&author_id=3
+</code></pre>
+
+<h3>GET /posts/{id}</h3>
+<p>Returns a single post by its ID.</p>
+
+<h4>Path Parameters</h4>
+<table>
+    <tr>
+        <th>Name</th><th>Type</th><th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td><td>int32</td><td>Post ID</td>
+    </tr>
+</table>
+
+<h4>Response</h4>
+<p>On success (<code>200 OK</code>):</p>
+<pre><code>{
+  "id": &lt;int32&gt;,
+  "title": &lt;string&gt;,
+  "content": &lt;string&gt;,
+  "author_id": &lt;int32&gt;
+}
+</code></pre>
+
+<p>If the post is not found, returns <code>404 Not Found</code> with a <code>PostNotFound</code> error.</p>
+
+<h4>Example Requests</h4>
+<pre><code>GET /posts/1       # Returns the post with id=1
+GET /posts/9999     # Returns 404 PostNotFound
+</code></pre>
+
+<hr/>
+
+<h2>Error Examples</h2>
+
+<h3>Invalid Range Error</h3>
+<pre><code>GET /random-number?min=50&max=10
+
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "error": "Invalid range",
+  "details": "Minimum value cannot be greater than maximum value."
+}
+</code></pre>
+
+<h3>User Not Found Error</h3>
+<pre><code>GET /users/9999
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{
+  "error": "User not found",
+  "details": "User with id 9999 not found"
+}
+</code></pre>
+
+<h3>Post Not Found Error</h3>
+<pre><code>GET /posts/9999
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{
+  "error": "Post not found",
+  "details": "Post with id 9999 not found"
+}
+</code></pre>
+
+<hr/>
+
+<h2>Data Models</h2>
+
+<h3>RandomNumber</h3>
+<pre><code>{
+  "number": &lt;uint8&gt;
+}
+</code></pre>
+
+<h3>User</h3>
+<pre><code>{
+  "id": &lt;int32&gt;,
+  "name": &lt;string&gt;,
+  "age": &lt;int32&gt;,
+  "bio": &lt;string | null&gt;
+}
+</code></pre>
+
+<h3>Post</h3>
+<pre><code>{
+  "id": &lt;int32&gt;,
+  "title": &lt;string&gt;,
+  "content": &lt;string&gt;,
+  "author_id": &lt;int32&gt;
+}
+</code></pre>
+
+<p>All responses are returned as JSON with <code>application/json</code> content type.</p>
+
+</body>
+</html>

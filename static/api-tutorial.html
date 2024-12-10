@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>API Tutorial</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+    }
+    h1, h2, h3 {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+    }
+    code {
+        background: #f9f9f9;
+        padding: 3px 5px;
+        border-radius: 3px;
+        font-family: Consolas, monospace;
+    }
+    pre {
+        background: #f9f9f9;
+        padding: 10px;
+        border-radius: 3px;
+        overflow-x: auto;
+    }
+</style>
+</head>
+<body>
+
+<h1>What is an API?</h1>
+<p>An <strong>API (Application Programming Interface)</strong> is a set of rules and protocols that allow different software applications to communicate with each other. In simpler terms, an API is like a waiter between a client (like a web app or a mobile app) and a server (which provides data or services). The client makes requests, and the server responds with the requested data, often in a structured format like JSON.</p>
+
+<p>APIs are widely used to fetch data from servers, perform actions on remote databases, integrate services from different providers, and more. Many popular services (such as Twitter, GitHub, and Google Maps) offer APIs that developers can use to build rich applications.</p>
+
+<h2>How to Use an API</h2>
+<p>To use an API, you typically:</p>
+<ol>
+    <li>Find the API endpoint URL and understand the parameters and response format.</li>
+    <li>Send a request (often an HTTP request) to the API endpoint.</li>
+    <li>Receive a response, usually in JSON format, and parse it in your application.</li>
+</ol>
+
+<p>We will use the provided API (from the previous documentation) as an example. This API has endpoints like <code>/random-number</code>, <code>/users</code>, and <code>/posts</code> that return JSON data.</p>
+
+<h3>Example Endpoint</h3>
+<p><code>GET /random-number</code>: This endpoint returns a random number between 0 and 255 by default. You can also provide query parameters to narrow down the range.</p>
+
+<p>For example, requesting <code>/random-number?min=10&max=20</code> returns a random number between 10 and 20.</p>
+
+<h2>Using the API with Python and the <code>requests</code> Module</h2>
+<p>Python’s <code>requests</code> module is a popular and easy-to-use library for making HTTP requests. You can install it by running:</p>
+<pre><code>pip install requests
+</code></pre>
+
+<p>Once installed, you can use it to make GET, POST, and other types of HTTP requests to APIs. Let’s walk through some examples using the provided API.</p>
+
+<h3>1. Fetching a Random Number</h3>
+<p>To fetch a random number, you send a GET request to the <code>/random-number</code> endpoint. For demonstration purposes, let’s assume the server is running on <code>http://localhost:8080</code> (change this to the actual host and port of your running service).</p>
+
+<pre><code>import requests
+
+# Define the base URL of the API
+BASE_URL = "http://localhost:8080"
+
+# Make a GET request to the /random-number endpoint
+response = requests.get(BASE_URL + "/random-number")
+
+# Check if the request was successful
+if response.status_code == 200:
+    data = response.json()
+    print("Random Number:", data["number"])
+else:
+    print("Error:", response.status_code, response.text)
+</code></pre>
+
+<p>This code sends a GET request and checks the response. If <code>status_code == 200</code>, it prints the random number. If there’s an error, it prints out the status code and the error details.</p>
+
+<h3>2. Using Query Parameters</h3>
+<p>To specify a range, you can add query parameters <code>min</code> and <code>max</code>. With <code>requests</code>, it’s easy to do this using the <code>params</code> argument:</p>
+
+<pre><code>import requests
+
+BASE_URL = "http://localhost:8080"
+
+params = {
+    "min": 10,
+    "max": 20
+}
+
+response = requests.get(BASE_URL + "/random-number", params=params)
+
+if response.status_code == 200:
+    data = response.json()
+    print("Random Number between 10 and 20:", data["number"])
+else:
+    print("Error:", response.status_code, response.text)
+</code></pre>
+
+<p>This will print a random number in the specified range. If you invert the range (e.g., <code>min=50</code> and <code>max=10</code>), the API will return a <code>400 Bad Request</code> error with JSON details.</p>
+
+<h3>3. Fetching Filtered Users</h3>
+<p>The <code>/users</code> endpoint returns a list of users. You can filter by providing query parameters like <code>id</code>, <code>name</code>, or <code>age</code>. For example, to get users named “Alice”:</p>
+
+<pre><code>import requests
+
+BASE_URL = "http://localhost:8080"
+
+params = {
+    "name": "Alice"
+}
+
+response = requests.get(BASE_URL + "/users", params=params)
+
+if response.status_code == 200:
+    data = response.json()
+    print("Users named Alice:")
+    for user in data:
+        print(user)
+else:
+    print("Error:", response.status_code, response.text)
+</code></pre>
+
+<p>This will return a JSON array of users that match the filter. You can further filter by <code>id</code> or <code>age</code> if needed.</p>
+
+<h3>4. Getting a Single User by ID</h3>
+<p>To get a specific user by their ID, make a request to <code>/users/{id}</code>:</p>
+
+<pre><code>import requests
+
+BASE_URL = "http://localhost:8080"
+
+user_id = 1
+response = requests.get(f"{BASE_URL}/users/{user_id}")
+
+if response.status_code == 200:
+    user = response.json()
+    print("User with ID 1:", user)
+else:
+    print("Error:", response.status_code, response.text)
+</code></pre>
+
+<p>If the user does not exist, you’ll get a <code>404 Not Found</code> error with a JSON error message.</p>
+
+<h3>5. Working with Posts</h3>
+<p>The process is similar for posts. To get a list of posts or filter them by author, send a GET request to <code>/posts</code> with query parameters:</p>
+
+<pre><code>import requests
+
+BASE_URL = "http://localhost:8080"
+
+params = {
+    "author_id": 1
+}
+
+response = requests.get(BASE_URL + "/posts", params=params)
+
+if response.status_code == 200:
+    posts = response.json()
+    print("Posts by author_id=1:")
+    for post in posts:
+        print(post)
+else:
+    print("Error:", response.status_code, response.text)
+</code></pre>
+
+<p>To get a single post by ID:</p>
+
+<pre><code>import requests
+
+BASE_URL = "http://localhost:8080"
+post_id = 3
+
+response = requests.get(f"{BASE_URL}/posts/{post_id}")
+
+if response.status_code == 200:
+    post = response.json()
+    print("Post with ID 3:", post)
+else:
+    print("Error:", response.status_code, response.text)
+</code></pre>
+
+<h2>Conclusion</h2>
+<p>APIs provide a simple way for different services and applications to communicate. By using the <code>requests</code> module in Python, you can easily send HTTP requests to API endpoints, get back structured data (often in JSON format), and use that data in your own applications.</p>
+
+<p>In this tutorial, you learned:</p>
+<ul>
+    <li>What an API is and why it’s useful.</li>
+    <li>How to send GET requests to an API endpoint with Python’s <code>requests</code>.</li>
+    <li>How to handle query parameters and parse JSON responses.</li>
+    <li>How to deal with errors by checking HTTP status codes and reading error messages.</li>
+</ul>
+
+<p>This knowledge serves as a foundation to interact with virtually any API on the internet.</p>
+
+</body>
+</html>
