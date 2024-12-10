@@ -354,6 +354,7 @@ async fn main() -> ShuttleActixWeb<impl FnOnce(&mut ServiceConfig) + Send + Clon
         cfg.service(get_post_by_id);
         cfg.service(api_docs);
         cfg.service(api_tutorial);
+        cfg.service(api_creating);
         cfg.service(index);
     };
 
