@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Recreating the API with Flask</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+    }
+
+    code {
+        background: #f9f9f9;
+        padding: 3px 5px;
+        border-radius: 3px;
+        font-family: Consolas, monospace;
+    }
+
+    pre {
+        background: #f9f9f9;
+        padding: 10px;
+        border-radius: 3px;
+        overflow-x: auto;
+    }
+</style>
+</head>
+<body>
+
+<h1>Recreating the API with Flask</h1>
+<p>This page explains how you could recreate a similar API to the one built with Actix-web using <a href="https://flask.palletsprojects.com/">Flask</a>, a popular Python micro-framework. Flask makes it easy to write simple APIs and web applications in Python. By following these steps, you can build endpoints that return JSON responses, handle query parameters, and manage errors gracefully.</p>
+
+<h2>Prerequisites</h2>
+<ul>
+    <li>Python 3.x installed on your machine.</li>
+    <li>Flask installed. You can install Flask by running:
+        <pre><code>pip install flask</code></pre>
+    </li>
+    <li>Optional: <code>requests</code> library for testing your API from Python.
+        <pre><code>pip install requests</code></pre>
+    </li>
+</ul>
+
+<h2>Project Structure</h2>
+<p>You can place your Flask application in a single file or break it down into multiple modules. For a simple tutorial, we’ll keep everything in <code>app.py</code>:</p>
+
+<pre><code>my_flask_project/
+│
+└── app.py
+</code></pre>
+
+<h2>Basic Flask App</h2>
+<p>Start by creating a simple Flask application:</p>
+<pre><code>from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return jsonify({"message": "Welcome to the Flask API!"})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+</code></pre>
+
+<p>Run this with <code>python app.py</code>, and navigate to <code>http://127.0.0.1:5000</code> in your browser. You should see a JSON response.</p>
+
+<h2>Recreating the Random Number Endpoint</h2>
+<p>Our previous API had a <code>/random-number</code> endpoint that returned a random number between 0 and 255 (default) or between a given <code>min</code> and <code>max</code> range.</p>
+
+<p>We’ll use Python’s <code>random</code> module for that:</p>
+<pre><code>import random
+
+@app.route('/random-number', methods=['GET'])
+def random_number():
+    # Get query parameters
+    min_val = request.args.get('min', default=0, type=int)
+    max_val = request.args.get('max', default=255, type=int)
+
+    if min_val > max_val:
+        return jsonify({
+            "error": "Invalid range",
+            "details": "Minimum value cannot be greater than maximum value."
+        }), 400
+
+    number = random.randint(min_val, max_val)
+    return jsonify({"number": number})
+</code></pre>
+
+<p>Now, you can test:
+<pre><code>GET http://127.0.0.1:5000/random-number?min=10&max=20
+</code></pre>
+<p>This should return a random number between 10 and 20. If <code>min=50&max=10</code> is provided, you’ll get a 400 error JSON response.</p>
+
+<h2>Recreating the Users and Posts Endpoints</h2>
+<p>In the original Actix-web code, we had <code>/users</code> and <code>/posts</code> endpoints with filtering capabilities. We can replicate these using Flask routes and query parameters.</p>
+
+<h3>Users Endpoint</h3>
+<pre><code>users = [
+    {"id": 1, "name": "Alice", "age": 25, "bio": "I am a software developer"},
+    {"id": 2, "name": "Bob", "age": 30, "bio": None},
+    {"id": 3, "name": "Charlie", "age": 35, "bio": "I am a data scientist"},
+    {"id": 4, "name": "David", "age": 40, "bio": None},
+    {"id": 5, "name": "Eve", "age": 45, "bio": "I am a security analyst"},
+    {"id": 6, "name": "Another Alice", "age": 25, "bio": "I am also a software developer"}
+]
+
+@app.route('/users', methods=['GET'])
+def get_users():
+    user_id = request.args.get('id', type=int)
+    name = request.args.get('name', type=str)
+    age = request.args.get('age', type=int)
+
+    filtered = users
+    if user_id is not None:
+        filtered = [u for u in filtered if u["id"] == user_id]
+    if name is not None:
+        filtered = [u for u in filtered if u["name"] == name]
+    if age is not None:
+        filtered = [u for u in filtered if u["age"] == age]
+
+    return jsonify(filtered)
+
+@app.route('/users/<int:user_id>', methods=['GET'])
+def get_user_by_id(user_id):
+    user = next((u for u in users if u["id"] == user_id), None)
+    if user is None:
+        return jsonify({"error": "User not found", "details": f"User with id {user_id} not found"}), 404
+    return jsonify(user)
+</code></pre>
+
+<p>Now, <code>GET /users</code> returns all users. You can filter by <code>id</code>, <code>name</code>, and <code>age</code>. For example:
+<pre><code>GET /users?name=Alice
+GET /users?id=2&age=30
+</code></pre>
+
+<p>To get a single user:
+<pre><code>GET /users/1
+</code></pre></p>
+
+<p>If the user does not exist, a <code>404</code> response is returned.</p>
+
+<h3>Posts Endpoint</h3>
+<pre><code>posts = [
+    {"id": 1, "title": "Post 1", "content": "Content of post 1", "author_id": 1},
+    {"id": 2, "title": "Post 2", "content": "Content of post 2", "author_id": 2},
+    {"id": 3, "title": "Post 3", "content": "Content of post 3", "author_id": 3},
+    {"id": 4, "title": "Post 4", "content": "Content of post 4", "author_id": 4},
+    {"id": 5, "title": "Post 5", "content": "Content of post 5", "author_id": 5},
+    {"id": 6, "title": "Post 6", "content": "Content of post 6", "author_id": 1},
+    {"id": 7, "title": "Post 7", "content": "Content of post 7", "author_id": 2},
+    {"id": 8, "title": "Post 8", "content": "Content of post 8", "author_id": 3},
+    {"id": 9, "title": "Post 9", "content": "Content of post 9", "author_id": 4},
+]
+
+@app.route('/posts', methods=['GET'])
+def get_posts():
+    post_id = request.args.get('id', type=int)
+    title = request.args.get('title', type=str)
+    content = request.args.get('content', type=str)
+    author_id = request.args.get('author_id', type=int)
+
+    filtered = posts
+    if post_id is not None:
+        filtered = [p for p in filtered if p["id"] == post_id]
+    if title is not None:
+        filtered = [p for p in filtered if p["title"] == title]
+    if content is not None:
+        filtered = [p for p in filtered if p["content"] == content]
+    if author_id is not None:
+        filtered = [p for p in filtered if p["author_id"] == author_id]
+
+    return jsonify(filtered)
+
+@app.route('/posts/<int:post_id>', methods=['GET'])
+def get_post_by_id(post_id):
+    post = next((p for p in posts if p["id"] == post_id), None)
+    if post is None:
+        return jsonify({"error": "Post not found", "details": f"Post with id {post_id} not found"}), 404
+    return jsonify(post)
+</code></pre>
+
+<p>You can now query posts similarly to how you did with Actix-web.</p>
+
+<h2>Error Handling</h2>
+<p>In Flask, you can also handle errors globally by using error handlers. For example:</p>
+<pre><code>@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Not found"}), 404
+</code></pre>
+
+<p>You can also raise and catch exceptions in a more advanced implementation, but for simplicity, our code returns JSON responses directly in the routes when something is not found.</p>
+
+<h2>Running and Testing</h2>
+<p>Start the Flask server by running:</p>
+<pre><code>python app.py
+</code></pre>
+<p>Then test the endpoints:</p>
+<ul>
+    <li><code>GET /random-number</code></li>
+    <li><code>GET /users</code> and <code>GET /users/1</code></li>
+    <li><code>GET /posts</code> and <code>GET /posts/1</code></li>
+</ul>
+
+<h2>Conclusion</h2>
+<p>By following the steps above, you’ve recreated similar API endpoints that were previously built in Actix-web, but now using Flask in Python. Flask’s simplicity and flexibility make it a great choice for quickly prototyping and deploying small to medium-sized web services and APIs.</p>
+
+</body>
+</html>

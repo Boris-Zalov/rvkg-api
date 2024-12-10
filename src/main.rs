@@ -334,6 +334,11 @@ async fn api_tutorial() -> Result<NamedFile, Error> {
     Ok(NamedFile::open("static/api-tutorial.html").map_err(|_| Error::InvalidRange("File not found".to_string()))?)
 }
 
+#[get("/api-creating")]
+async fn api_creating() -> Result<NamedFile, Error> {
+    Ok(NamedFile::open("static/api-creating.html").map_err(|_| Error::InvalidRange("File not found".to_string()))?)
+}
+
 #[get("/")]
 async fn index() -> Result<NamedFile, Error> {
     Ok(NamedFile::open("static/index.html").map_err(|_| Error::InvalidRange("File not found".to_string()))?)
